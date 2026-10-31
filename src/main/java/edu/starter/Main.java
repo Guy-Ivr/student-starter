@@ -15,6 +15,13 @@ public final class Main {
         return Math.max(0, player_HP - 10);
     }
 
+    static int counter_attack_if_enemy_alive(int player_HP, int enemy_HP, boolean pending_defence) {
+        if (enemy_HP > 0) {
+            return counter_attack(player_HP, pending_defence);
+        }
+        return player_HP;
+    }
+
     static int special(int enemy_HP) {
         return Math.max(0, enemy_HP - 15);
     }
@@ -41,16 +48,12 @@ public final class Main {
 
                 if (action.equals("attack")) {
                     enemy_HP = attack(enemy_HP);
-                    if (enemy_HP > 0) {
-                        player_HP = counter_attack(player_HP, pending_defence);
-                    }
+                    player_HP = counter_attack_if_enemy_alive(player_HP, enemy_HP, pending_defence);
                 } else if (action.equals("special")) {
                     if (resource_count >= 3) {
                         resource_count -= 3;
                         enemy_HP = special(enemy_HP);
-                        if (enemy_HP > 0) {
-                            player_HP = counter_attack(player_HP, pending_defence);
-                        }
+                        player_HP = counter_attack_if_enemy_alive(player_HP, enemy_HP, pending_defence);
                     } else {
                         System.out.println("Not enough resources for special attack.");
                     }
@@ -58,8 +61,12 @@ public final class Main {
                     pending_defence = true;
                     player_HP = counter_attack(player_HP, pending_defence);
                 } else if (action.equals("recover")) {
-                    resource_count = recover(resource_count);
-                    player_HP = counter_attack(player_HP, pending_defence);
+                    if (resource_count < 10) {
+                        resource_count = recover(resource_count);
+                        player_HP = counter_attack(player_HP, pending_defence);
+                    } else {
+                        System.out.println("Resource count is already at maximum. Cannot recover further.");
+                    }
                 } else {
                     System.out.println("Invalid action. Please try again.");
                 }

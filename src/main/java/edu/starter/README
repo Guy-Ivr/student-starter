@@ -1,0 +1,84 @@
+Project Description
+This is a game where the player can choose to attack, defend, recover, or use a special attack against an enemy. 
+The player has a certain amount of HP and resource points that can be used for special attacks. 
+The goal is to eliminate the enemy while managing your own HP and resources.
+
+Compile
+javac edu/starter/Main.java
+
+Run 
+java edu.starter.Main
+
+Verified the program is working as expected by running the following sequences:
+W01-ATK-01
+    Player HP: 100
+    Enemy HP: 30
+    Resource count: 5
+    Pending defence: false
+    Enter your action (attack, special, defend, recover): attack
+    Player HP: 90
+    Enemy HP: 20
+    Resource count: 5
+    Pending defence: false
+
+W01-DEF-01
+    Player HP: 100
+    Enemy HP: 30
+    Resource count: 5
+    Pending defence: false
+    Enter your action (attack, special, defend, recover): defend
+    Player HP: 95
+    Enemy HP: 30
+    Resource count: 5
+    Pending defence: false
+
+ W01-SPC-01
+    Player HP: 100
+    Enemy HP: 30
+    Resource count: 5
+    Pending defence: false
+    Enter your action (attack, special, defend, recover): special
+    Player HP: 90
+    Enemy HP: 15
+    Resource count: 2
+    Pending defence: false
+
+ W01-RES-01
+    Player HP: 100
+    Enemy HP: 30
+    Resource count: 9
+    Pending defence: false
+    Enter your action (attack, special, defend, recover): recover
+    Player HP: 90
+    Enemy HP: 30
+    Resource count: 10
+    Pending defence: false
+
+W01-INV-01
+    Player HP: 100
+    Enemy HP: 30
+    Resource count: 5
+    Pending defence: false
+    Enter your action (attack, special, defend, recover): ski-jump
+    Invalid action. Please try again.
+    Player HP: 100
+    Enemy HP: 30
+    Resource count: 5
+    Pending defence: false
+
+Python vs Java
+Java requires compilation before execution, while Python is interpreted and can be run directly. 
+Python has a simpler syntax and uses dynamic typing when Java is statically typed.
+
+Design Decisions
+We set the initial values with local variables in the main method representing the state and for every potential action we set a method that updates the state accordingly.
+In every turn the player is selecting an action and the state is updated accordingly. 
+The turns are managed by iterating through a loop until either the player or the enemy reaches 0 HP.
+Some of the edge cases are managed in the Main method, for example if the enemy is defeated the player will not be counter attacked.
+Others are handled in the methods, for example if the player is defending the counter attack will be reduced by 5 HP.
+
+AI-use note:
+When the program did not compile, I used the AI assistant to help identify and fix the issue.
+In some cases the AI assistant provided suggestions that helped me handle the edge cases.
+Finally I used it to extract the counter_attack_if_enemy_alive method to avoid code duplication.
+The assistant suggested that when the special can't be applied due to low resource points the counter attack should still be applied, but it contradicted the game rules, so i rejected the suggestion.
