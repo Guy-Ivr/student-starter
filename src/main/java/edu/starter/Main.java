@@ -51,6 +51,8 @@ public final class Main {
                         if (enemy_HP > 0) {
                             player_HP = counter_attack(player_HP, pending_defence);
                         }
+                    } else {
+                        System.out.println("Not enough resources for special attack.");
                     }
                 } else if (action.equals("defend")) {
                     pending_defence = true;
