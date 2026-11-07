@@ -1,14 +1,20 @@
-public static void main(String[] args) {
+package edu.starter;
+
+import java.util.Scanner;
+
+public final class Main{
+    public static void main(String[] args) {
     try (Scanner scanner = new Scanner(System.in)) {
     Combatant player = new Combatant("Player", 100, 5, 10);
     Combatant enemyA = new Combatant("Enemy A", 30);
 
     Battle battle = new Battle(player, enemyA, scanner);
-
+    System.out.println("=== Encounter 1 ===");
     boolean won = battle.play();
 
     if (won) {
         System.out.println("You won first battle!");
+        System.out.println("=== Encounter 2 ===");
         player.clearDefense();
         Combatant enemyB = new Combatant("Enemy B", 45);
         Battle battle2 = new Battle(player, enemyB, scanner);
@@ -21,5 +27,6 @@ public static void main(String[] args) {
     } else {
         System.out.println("You lose!");
     }
+}
 }
 }
