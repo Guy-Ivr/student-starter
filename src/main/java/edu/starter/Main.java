@@ -1,86 +1,25 @@
-package edu.starter;
+public static void main(String[] args) {
+    try (Scanner scanner = new Scanner(System.in)) {
+    Combatant player = new Combatant("Player", 100, 5, 10);
+    Combatant enemyA = new Combatant("Enemy A", 30);
 
-import java.util.Scanner;
+    Battle battle = new Battle(player, enemyA, scanner);
 
-/** Student-owned game entry point; replace this message with your own implementation. */
-public final class Main {
-    static int attack(int enemy_HP) {
-        return Math.max(0, enemy_HP - 10);
-    }
+    boolean won = battle.play();
 
-    static int counter_attack(int player_HP, boolean pending_defence) {
-        if (pending_defence) {
-            return Math.max(0, player_HP - 5);
-        }
-        return Math.max(0, player_HP - 10);
-    }
-
-    static int counter_attack_if_enemy_alive(int player_HP, int enemy_HP, boolean pending_defence) {
-        if (enemy_HP > 0) {
-            return counter_attack(player_HP, pending_defence);
-        }
-        return player_HP;
-    }
-
-    static int special(int enemy_HP) {
-        return Math.max(0, enemy_HP - 15);
-    }
-
-    static int recover(int resource_count) {
-        return Math.min(10, resource_count + 3);
-    }
-
-    public static void main(String[] args) {
-        int player_HP = 100;
-        int enemy_HP = 30;
-        int resource_count = 5;
-        boolean pending_defence = false;
-
-        try (Scanner scanner = new Scanner(System.in)) {
-            while (player_HP > 0 && enemy_HP > 0) {
-                System.out.println("Player HP: " + player_HP);
-                System.out.println("Enemy HP: " + enemy_HP);
-                System.out.println("Resource count: " + resource_count);
-                System.out.println("Pending defence: " + pending_defence);
-
-                System.out.print("Enter your action (attack, special, defend, recover): ");
-                String action = scanner.nextLine();
-
-                if (action.equals("attack")) {
-                    enemy_HP = attack(enemy_HP);
-                    player_HP = counter_attack_if_enemy_alive(player_HP, enemy_HP, pending_defence);
-                } else if (action.equals("special")) {
-                    if (resource_count >= 3) {
-                        resource_count -= 3;
-                        enemy_HP = special(enemy_HP);
-                        player_HP = counter_attack_if_enemy_alive(player_HP, enemy_HP, pending_defence);
-                    } else {
-                        System.out.println("Not enough resources for special attack.");
-                    }
-                } else if (action.equals("defend")) {
-                    pending_defence = true;
-                    player_HP = counter_attack(player_HP, pending_defence);
-                } else if (action.equals("recover")) {
-                    if (resource_count < 10) {
-                        resource_count = recover(resource_count);
-                        player_HP = counter_attack(player_HP, pending_defence);
-                    } else {
-                        System.out.println("Resource count is already at maximum. Cannot recover further.");
-                    }
-                } else {
-                    System.out.println("Invalid action. Please try again.");
-                }
-
-                // Reset pending defence after the turn
-                pending_defence = false;
-            }
-        }
-
-        if (player_HP > 0) {
-            System.out.println("You win!");
+    if (won) {
+        System.out.println("You won first battle!");
+        player.clearDefense();
+        Combatant enemyB = new Combatant("Enemy B", 45);
+        Battle battle2 = new Battle(player, enemyB, scanner);
+        boolean won2 = battle2.play();
+        if (won2) {
+            System.out.println("You won second battle!");
         } else {
-            System.out.println("You lose!");
+            System.out.println("You lose after second battle!");
         }
+    } else {
+        System.out.println("You lose!");
     }
-
+}
 }
