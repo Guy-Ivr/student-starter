@@ -6,6 +6,7 @@ public class Battle {
     private Scanner scanner;
     private Combatant player;
     private Combatant enemy;
+    private boolean rewardClaimed = false;
 
     public Battle(Combatant player, Combatant enemy, Scanner scanner) {
         this.player = player;
@@ -58,5 +59,48 @@ public class Battle {
         }
 
     return player.getHp() > 0;
+    }
+
+
+/**
+ * Preconditions:
+ * - Encounter 1 was won.
+ * - Player is alive.
+ * - No reward has been claimed.
+ *
+ * Postconditions:
+ * - Exactly one valid reward is claimed.
+ *
+ * RECOVERY:
+ * - hp = min(maxHp, oldHp + 25)
+ * - Resource and attack damage remain unchanged.
+ * - Reward is consumed even if HP was already full.
+ *
+ * POWER:
+ * - attackDamage = oldAttackDamage + 2
+ * - HP and resource remain unchanged.
+ *
+ * Invalid input does not change player state.
+ * A second reward attempt is rejected.
+ */
+
+    public void reward() {
+        if (enemy.getHp() > 0 || player.getHp() <= 0 || rewardClaimed) {
+        System.out.println("Reward not available.");
+        return;}
+        while (!rewardClaimed) {
+        System.out.println("Choose a reward:\n1.recovery - Increase current HP by 25\n2.power - Increase attack damage by 2\nenter choice: ");
+        String choice = scanner.nextLine();
+        if (choice.equals("1")) {
+            player.increaseHp(25);
+            rewardClaimed = true;    
+        } else if (choice.equals("2")) {
+            player.increaseAttackDamage(2);
+            rewardClaimed = true;
+        }
+        else {
+            System.out.println("Invalid choice. Choose again.");
+        }
+    }
     }
 }

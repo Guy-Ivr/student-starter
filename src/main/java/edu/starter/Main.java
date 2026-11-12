@@ -14,6 +14,7 @@ public final class Main{
 
     if (won) {
         System.out.println("You won first battle!");
+        battle.reward();
         System.out.println("=== Encounter 2 ===");
         player.clearDefense();
         Combatant enemyB = new Combatant("Enemy B", 45);

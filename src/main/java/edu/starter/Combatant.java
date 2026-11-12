@@ -1,5 +1,13 @@
 package edu.starter;
-
+/**
+ * Class Invariants:
+ * 1. 0 <= hp <= maxHp
+ * 2. 0 <= resource <= 10
+ * 3. attackDamage is a non-negative integer that never decreases
+ * 4. pendingDefense is true only if the combatant has chosen to defend and has not yet taken damage
+ * 5. name is a non-null, non-empty string
+ * 6. maxHp is a positive integer
+ */
 public class Combatant {
 
         private String name;
@@ -8,23 +16,24 @@ public class Combatant {
         private int resource;
         private boolean pendingDefense;
         private int attackDamage;
-        
+
 public Combatant(String name, int maxHp) {
     this(name, maxHp, 0, 10);
 }
+
+/**
+ * Preconditions:
+ * - name != null && !name.isBlank()
+ * - maxHp > 0
+ * - 0 <= resource <= 10
+ * - attackDamage >= 0
+ *
+ * Postconditions:
+ * - hp == maxHp
+ * - pendingDefense == false
+ * - All fields are initialized.
+ */
 public Combatant(String name, int maxHp, int resource, int attackDamage) {
-    if (maxHp <= 0) {
-        throw new IllegalArgumentException("Max HP must be positive");
-    }
-
-    if (resource < 0 || resource > 10) {
-        throw new IllegalArgumentException("Resources must be between 0 and 10");
-    }
-
-    if (attackDamage < 0) {
-        throw new IllegalArgumentException("Attack damage cannot be negative");
-    }
-
     this.name = name;
     this.maxHp = maxHp;
     this.hp = maxHp;
@@ -32,7 +41,7 @@ public Combatant(String name, int maxHp, int resource, int attackDamage) {
     this.pendingDefense = false;
     this.attackDamage = attackDamage;
 }
-        
+
 public String getName() {
     return name;
 }
@@ -57,12 +66,21 @@ public boolean isPendingDefense() {
     return pendingDefense;
 }
 
-
+/**
+ * Precondition:
+ * damage >= 0
+ *
+ * Postconditions:
+ * hp = max(0, oldHp - damage) if pendingDefense is false
+ * hp = max(0, oldHp - max(0, damage - 5))
+ *      if pendingDefense was true.
+* pendingDefense = false if it was active before the hit.
+ * resource and attackDamage remain unchanged.
+ *
+ * Invariant:
+ * 0 <= hp <= maxHp
+ */
 public void takeDamage(int damage) {
-    if (damage < 0) {
-        throw new IllegalArgumentException("Damage cannot be negative");
-    }
-
     if (pendingDefense) {
         damage = Math.max(0, damage - 5);
         pendingDefense = false;
@@ -83,6 +101,19 @@ public boolean spendResource(int amount) {
     resource -= amount;
     return true;
 }
+/**
+ * Postconditions:
+ * - If resource < 10:
+ *   resource = min(10, oldResource + 3)
+ *   returns true.
+ * - If resource == 10:
+ *   resource remains unchanged
+ *   returns false.
+ * - HP and attackDamage remain unchanged.
+ *
+ * Invariant:
+ * 0 <= resource <= 10
+ */
 public boolean recoverResource() {
     if (resource >= 10) {
         return false;
@@ -95,4 +126,39 @@ public boolean recoverResource() {
 public void clearDefense() {
     pendingDefense = false;
 }
-    }   
+
+/**
+ * Precondition:
+ * amount >= 0
+ *
+ * Postconditions:
+ * attackDamage = oldAttackDamage + amount
+ * hp and resource remain unchanged.
+ *
+ * Invariant:
+ * attackDamage never decreases.
+ */
+public void increaseAttackDamage(int amount) {
+    attackDamage += amount;
+}
+
+/**
+ * Precondition:
+ * amount >= 0
+ *
+ * Postconditions:
+ * hp = min(maxHp, oldHp + amount)
+ * resource and attackDamage remain unchanged.
+ * if hp was already at maxHp, it remains unchanged and the method returns false.
+ * 
+ * Invariant:
+ * 0 <= hp <= maxHp
+ */
+public boolean increaseHp(int amount) {
+    if (hp >= maxHp) {
+        return false;
+    }
+    hp += Math.min(amount, maxHp - hp);
+    return true;
+}
+}
