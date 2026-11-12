@@ -1,57 +1,329 @@
-# Week 2 — Test Evidence
+# Week 3 — Test Evidence
 
-Tests for *Two Encounters, One Evolving Player*. These results were checked during development using the console game and a separate `CombatantTest.java` runner. The commands below assume the project is compiled with Maven (`mvn compile`) and run from the project root.
+## Project: Java OOP Adventure
 
-## Acceptance tests (T1–T7)
+### Overview
 
-| Test | Reproducible setup / input | Expected result | Observed result | Status |
-| --- | --- | --- | --- | --- |
-| T1 / W02-OBJ-01 | Create Enemy A at 30 HP and Enemy B at 45 HP; apply `enemyA.takeDamage(10)` | A=20, B=45 | A=20, B=45 | PASS |
-| T2 / W02-ENC-01 | In Encounter 1 enter `special`, `attack`, `attack` | Encounter 2: player HP=80, resource=2 | Earlier console run showed HP=80, resource=2 | PASS |
-| T3 / W02-ENC-02 | Defeat Enemy A, start Encounter 2 | New enemy HP=45 | Console showed Enemy B at 45 HP | PASS |
-| T4 / W02-ENC-03 | `setGuard()`, `clearDefense()`, then `takeDamage(10)` on a 100-HP player | Defense cleared, HP=90 | Output `true`, `false`, `90` in focused check; expanded test HP=90 | PASS |
-| T5 / W01-INV-01 | In Encounter 1 enter `special`, then `special` again | Second attempt rejected with player HP=90, resource=2, enemy HP=15; no counterattack | Console showed rejection and unchanged state | PASS |
-| T6 / W01-END | From Enemy A=30 HP, enter `attack` three times | Enemy reaches 0; player remains at 80 HP | Console showed victory and Encounter 2 starting with player HP=80 | PASS |
-| T7 / TERM | In Encounter 1 enter `defend` 20 times | Player reaches 0 HP; no Encounter 2 | Confirmed loss and no second encounter | PASS |
+This document describes the acceptance tests and regression tests for Week 3.
 
-## Combatant boundary checks
+The goal is to verify that the reward system works correctly, that contracts and invariants are preserved, and that all combat mechanics from Weeks 1 and 2 continue to work.
 
-Run `CombatantTest.java`:
+Tests are implemented in `Week03Tests.java`, using the existing `Combatant`, `Battle`, and `Main` classes.
 
-```powershell
+## 1. Week 3 Acceptance Tests
+
+### T1 — Recovery Reward at 90 HP
+
+**Initial state:**
+- Player HP: 90/100
+- Resources: 5
+- Attack damage: 10
+
+**Action:** Select Recovery (+25 HP).
+
+**Expected result:**
+- HP becomes 100 (capped at maxHp).
+- Resources remain 5.
+- Attack damage remains 10.
+
+**Result:** PASS — HP restored to 100 without exceeding the maximum.
+
+### T2 — Recovery Reward at Full HP
+
+**Initial state:**
+- Player HP: 100/100
+- Resources: 5
+- Attack damage: 10
+
+**Action:** Select Recovery.
+
+**Expected result:**
+- HP remains 100.
+- Resources and Attack remain unchanged.
+- The reward is consumed even though HP did not increase.
+
+**Result:** PASS — Recovery leaves HP unchanged and the reward is considered claimed.
+
+### T3 — Power Reward
+
+**Initial state:**
+- Basic Attack: 10
+- Special damage: 15
+
+**Action:** Select Power (+2 Attack).
+
+**Expected result:**
+- Basic Attack becomes 12.
+- Special still deals exactly 15 damage.
+- HP and resources remain unchanged.
+
+**Result:** PASS — Basic Attack increased to 12 while Special remained 15.
+
+### T4 — Invalid Reward Input
+
+**Initial state:**
+- Encounter 1 completed successfully.
+- No reward claimed.
+
+**Input:**
+1. Enter an invalid choice.
+2. Enter `2` for Power.
+
+**Expected result:**
+- Invalid input displays an error.
+- No player state changes after the invalid input.
+- The reward menu is displayed again.
+- Power is applied exactly once after the valid choice.
+
+**Result:** PASS — Invalid input was rejected and a valid choice was accepted afterward.
+
+### T5 — Reward Before Victory
+
+**Initial state:**
+- Encounter 1 has not been won.
+- Enemy is still alive.
+
+**Action:** Attempt to request a reward.
+
+**Expected result:**
+- Reward is rejected.
+- HP, resources, and Attack remain unchanged.
+
+**Result:** PASS — Reward was unavailable before victory.
+
+### T6 — Duplicate Reward Attempt
+
+**Initial state:**
+- Encounter 1 completed successfully.
+- One reward already claimed.
+
+**Action:** Attempt to claim another reward using the same Battle object.
+
+**Expected result:**
+- Second request is rejected.
+- No additional HP or Attack increase.
+- `rewardClaimed` remains true.
+
+**Result:** PASS — A second reward request on the same Battle object was rejected.
+
+**Design note:** `rewardClaimed` belongs to each Battle instance. The current game flow only offers a reward through the first Battle object.
+
+### T7 — Losing Encounter 1
+
+**Initial state:**
+- Player HP: 100
+- Enemy A HP: 30
+
+**Input:** Repeat Defend until the player reaches 0 HP.
+
+**Expected result:**
+- The player loses Encounter 1.
+- No reward is offered.
+- Encounter 2 does not start.
+
+**Result:** PASS — The adventure ended after the first defeat.
+
+### T8 — Player State Persistence
+
+**Initial state:**
+- Player HP: 100
+- Resources: 5
+- Enemy A HP: 30
+
+**Input:**
+1. `special`
+2. `attack`
+3. `attack`
+
+**Expected result after Encounter 1:**
+- Player HP: 80
+- Resources: 2
+- Enemy A HP: 0
+
+**Expected Encounter 2 state:**
+
+If Power is selected:
+- HP: 80
+- Resources: 2
+- Attack: 12
+
+If Recovery is selected:
+- HP: 100
+- Resources: 2
+- Attack: 10
+
+Enemy B starts with 45 HP in both cases.
+
+**Result:** PASS — Player state persisted, with only the selected reward changing the appropriate field.
+
+### T9 — Final Victory and Counterattack Prevention
+
+**Initial state:**
+- Encounter 2 is active.
+- Player and enemy are alive.
+
+**Action:** Defeat Enemy B with a finishing attack.
+
+**Expected result:**
+- Enemy HP becomes 0.
+- Defeated enemy does not counterattack.
+- The adventure ends with a victory message.
+- No additional turn or reward is offered.
+
+**Result:** PASS — Finishing attack ended combat without a counterattack.
+
+---
+
+## 2. Regression Tests — Weeks 1 and 2
+
+### R1 — Independent Enemy Objects
+
+**Setup:**
+- Enemy A starts at 30 HP.
+- Enemy B starts at 45 HP.
+
+**Action:** Deal 10 damage to Enemy A.
+
+**Expected:**
+- Enemy A: 20 HP
+- Enemy B: 45 HP
+
+**Result:** PASS
+
+### R2 — Special With Insufficient Resources
+
+**Setup:** Player has 2 resources.
+
+**Action:** Attempt Special (cost: 3).
+
+**Expected:**
+- Special is rejected.
+- Resources remain 2.
+- Enemy HP is unchanged.
+- No counterattack occurs.
+
+**Result:** PASS
+
+### R3 — Resource Cap
+
+**Setup:** Player has 9 resources.
+
+**Action:** Use Recover.
+
+**Expected:**
+- Resources become 10, not 12.
+- Recover at 10 resources is rejected.
+
+**Result:** PASS
+
+### R4 — HP Lower Bound
+
+**Setup:** Enemy has 5 HP.
+
+**Action:** Deal 10 damage.
+
+**Expected:**
+- Enemy HP becomes 0, not -5.
+
+**Result:** PASS
+
+### R5 — Defense Reset
+
+**Setup:**
+- Player activates pending defense.
+- Defense is cleared before the next encounter.
+
+**Action:** Enemy deals 10 damage.
+
+**Expected:**
+- Full 10 damage is applied.
+- No defense carries into the next encounter.
+
+**Result:** PASS
+
+---
+
+## 3. Contracts and Invariants Verification
+
+The tests also verify the important invariants and postconditions defined in `Combatant.java`.
+
+### HP Invariant
+
+`0 <= hp <= maxHp`
+
+Verified through:
+- Damage that would otherwise reduce HP below zero.
+- Recovery that would otherwise exceed maximum HP.
+
+### Resource Invariant
+
+`0 <= resource <= 10`
+
+Verified through:
+- Special with insufficient resources.
+- Recover near maximum resources.
+- Recover at maximum resources.
+
+### Attack Damage Contract
+
+Power increases basic Attack damage by 2 without changing Special damage, HP, or resources.
+
+### Reward Contract
+
+The reward system rejects invalid input, requires victory before offering a reward, and prevents repeated rewards on the same Battle object.
+
+---
+
+## 4. Test Execution
+
+The tests are implemented without JUnit, using Java's existing classes and simulated console input.
+
+### Compile
+
+```bash
 mvn compile
-java -cp target/classes edu.starter.CombatantTest
 ```
 
-Observed output:
+### Run
 
-```text
-T1 - Enemy A HP: 20
-T1 - Enemy B HP: 45
-T4 - Player HP: 90
-Special with 2: false
-Remaining resources: 2
-Special with 3: true
-Remaining resources: 0
-Recover from 9: 10
-Recover at 10: false
-HP after 10 damage: 0
+```bash
+java -cp target/classes edu.starter.Week03Tests
 ```
 
-These checks show that:
+### Reported Test Summary
 
-- Two combatants have independent HP.
-- Defense can be explicitly cleared before the next hit.
-- Spending 3 resources fails at 2, succeeds at 3, and never reduces resources below zero.
-- Recovering from 9 caps resources at 10; recovering at 10 is rejected.
-- Damage cannot make HP negative (a 5-HP enemy receiving 10 damage ends at 0 HP).
+| Test group | Passed | Failed |
+|---|---:|---:|
+| Week 3 acceptance tests T1–T9 | 9 | 0 |
+| Regression tests R1–R5 | 5 | 0 |
+| **Total** | **14** | **0** |
 
-## Invalid input regression
+The test suite was previously reported as passing all 14 checks against the supplied Java implementation.
 
-In the console game, entering `10`, `speical`, and `pending defence` produced `Invalid action.` with unchanged HP/resources and no counterattack. This verifies that an invalid choice does not consume a turn.
+---
 
-## Notes
+## 5. Conclusion
 
-- `T4` was verified through a deliberately prepared combatant state: under the current battle rules, using Defend immediately causes a counterattack that consumes pending defense. The separate check proves that `clearDefense()` works even if defense remains set before a new encounter.
-- `T7` was checked in the interactive console run; its full 20-turn transcript was not retained in this file. The result was reported as passing.
-- Constructor validation (nonpositive maximum HP, resource outside 0–10, negative attack damage) exists in `Combatant.java` but has **not** been separately recorded as an executed negative-input test here.
+The tests demonstrate the expected behavior of the Week 3 reward system and verify that the original combat mechanics remain functional.
+
+The implementation maintains the same player object across both encounters, applies the selected reward to that object, and preserves the legal HP and resource boundaries.
+
+The project uses contracts to describe expected behavior and automated tests to check that the implementation follows those contracts.
+
+## 6. Week03Tests Results
+PASS T1 Recovery at 90 HP
+PASS T2 Recovery at max HP consumed
+PASS T3 Power 12; Special still 15
+PASS T4 Invalid choice retries then POWER
+PASS T5 No reward before victory
+PASS T6 Second reward attempt rejected
+PASS T7 Lose first encounter: stop
+PASS T8 Preserve 80 HP / 2 resources
+PASS T9 Final victory / no finishing counterattack
+PASS Regression: enemy independence
+PASS Regression: failed Special has no counterattack
+PASS Regression: resource capped at 10
+PASS Regression: HP capped at 0
+PASS Regression: cleared defense
+
+RESULT: 14 passed, 0 failed

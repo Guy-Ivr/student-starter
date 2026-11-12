@@ -172,3 +172,168 @@ I chose not to put keyboard input inside `Combatant`, because reading commands i
 1. **Useful suggestion:** After I decided to use constructor overloading, AI suggested using `this()` to avoid duplicating initialization code between constructors, which I implemented.
 2. **Rejected suggestion:** AI recommended keeping attack damage fixed at 10 in the `Battle` class, but I chose to store `attackDamage` in `Combatant` to support different attack strengths.
 3. **Verification:** I tested that damaging Enemy A reduced its HP from 30 to 20 while Enemy B remained at 45 HP, confirming that each object has independent state.
+
+# Java OOP Adventure — Weeks 3
+
+## Project Overview
+
+This project is a Java console-based combat game developed throughout the first three weeks of the Java OOP course.
+
+The game consists of two consecutive encounters. The player starts with 100 HP and 5 resources, fights an enemy with 30 HP, chooses a reward after winning, and continues to a second enemy with 45 HP.
+
+The same player object is used throughout the adventure, preserving its HP, resources, and upgrades between encounters.
+
+### Combat Actions
+
+The player can choose between four actions:
+
+- **Attack:** Deals 10 damage initially. Can be upgraded to 12 through the Power reward.
+- **Defend:** Reduces the next incoming attack by 5 damage.
+- **Special:** Costs 3 resources and deals 15 damage.
+- **Recover:** Restores 3 resources, up to a maximum of 10.
+
+The enemy counterattacks for 10 damage after a successful player action if it survives. Invalid actions do not trigger a counterattack.
+
+### Week 3 — Reward System
+
+After winning Encounter 1, the player chooses exactly one reward:
+
+1. **Recovery:** Restores 25 HP, capped at the maximum HP of 100.
+2. **Power:** Permanently increases basic Attack damage by 2.
+
+The reward is available only after winning the first encounter.
+
+Invalid reward choices are rejected without changing the player's state, and the player is asked to choose again.
+
+The `rewardClaimed` boolean prevents multiple rewards from being claimed through the same Battle object.
+
+Choosing Recovery at full HP still consumes the reward.
+
+## Project Structure
+
+```text
+src/main/java/edu/starter/
+    Main.java
+    Battle.java
+    Combatant.java
+    CombatantTest.java
+    Week03Tests.java
+```
+
+### Class Responsibilities
+
+**Main.java**
+
+Creates the player and enemies, manages the two encounters, and determines the overall game outcome. It also creates the Scanner shared between battles.
+
+**Battle.java**
+
+Manages the battle loop, user input, combat actions, counterattacks, and reward selection after the first battle.
+
+**Combatant.java**
+
+Stores each character's state, including HP, maximum HP, resources, attack damage, and pending defense. It provides methods for safely modifying these values.
+
+
+## How to Compile and Run
+
+### Requirements
+- Java JDK 17 or later
+- Java installed and available in PATH
+- VS Code or another Java IDE
+
+### Compile
+
+Run from the project root:
+
+javac -d target/classes src/main/java/edu/starter/*.java
+
+### Run the game
+
+java -cp target/classes edu.starter.Main
+
+### Run Week 3 tests
+
+java -cp target/classes edu.starter.Week03Tests
+
+## Example Gameplay
+
+Starting state:
+
+```text
+Player HP: 100
+Enemy HP: 30
+Resources: 5
+```
+
+Encounter 1:
+
+```text
+special
+attack
+attack
+```
+
+Result:
+
+```text
+Player HP: 80
+Resources: 2
+Enemy HP: 0
+```
+
+The player then selects a reward.
+
+Choosing Power:
+
+```text
+2
+```
+
+Encounter 2 begins with:
+
+```text
+Player HP: 80
+Resources: 2
+Attack Damage: 12
+Enemy HP: 45
+```
+
+Choosing Recovery instead would start Encounter 2 with 100 HP, 2 resources, and Attack damage of 10.
+
+## Testing
+
+The project includes tests for:
+
+- Independent enemy objects
+- HP and resource persistence
+- Recovery and Power rewards
+- Invalid reward selections
+- Prevention of duplicate reward claims
+- Resource limits and HP boundaries
+- Defense reset
+- Failed Special attacks
+- Victory and defeat behavior
+
+The Week 3 test suite covers T1–T9 and regression checks from earlier weeks.
+
+See `TEST_EVIDENCE.md` for the detailed results.
+
+---
+
+## Week 3 — Design Note
+
+For Week 3, I extended my existing three-class design by adding a reward system while keeping the combat mechanics unchanged. I decided to place the `reward()` method in `Battle` rather than `Main`, because I consider choosing a reward part of completing a battle. `Main` still controls the sequence of encounters and calls the reward method only after the first victory.
+
+I used `rewardClaimed` to prevent a reward from being selected twice within the same battle object. I also replaced the recursive retry logic with a `while` loop, allowing invalid choices to be retried without modifying the player's state. Recovery and Power modify the existing player object, preserving its identity and resources.
+I also introduced a Reward enum to represent the two valid reward types (RECOVERY and POWER), separating input interpretation from reward execution and avoiding the use of raw string values in the reward logic.
+
+I documented preconditions, postconditions, and invariants in `Combatant`. Preconditions define the caller's responsibilities, postconditions describe the guaranteed results, and invariants define valid object states, such as HP and resource limits.
+
+I chose to express these rules through general contracts rather than relying only on defensive checks or individual assertions. Contracts describe the expected behavior for all valid inputs instead of checking only specific edge cases. This keeps responsibilities clear and avoids unnecessary duplicated validation. However, I still used tests to verify that the implementation follows these contracts.
+
+## Week 3 — AI Reflection
+
+1. **Useful suggestion:** AI suggested adding a `rewardClaimed` boolean to prevent multiple rewards from being selected. I implemented it and used it as the condition for the reward-selection loop.
+2. **Rejected suggestion:** AI recommended moving reward management to `Main`, but I chose to keep the `reward()` method in `Battle` because I consider reward selection part of finishing an encounter.
+3. **Verification:** I independently tested that invalid reward input does not change the player's state and that a second reward attempt is rejected. I also verified that Power increases basic Attack damage to 12 while Special remains at 15.

@@ -3,6 +3,10 @@ package edu.starter;
 import java.util.Scanner;
 
 public class Battle {
+    private enum Reward {
+    RECOVERY,
+    POWER
+}
     private Scanner scanner;
     private Combatant player;
     private Combatant enemy;
@@ -89,18 +93,34 @@ public class Battle {
         System.out.println("Reward not available.");
         return;}
         while (!rewardClaimed) {
-        System.out.println("Choose a reward:\n1.recovery - Increase current HP by 25\n2.power - Increase attack damage by 2\nenter choice: ");
+        System.out.println("Choose a reward, choose 1 or 2:\n1.recovery - Increase current HP by 25\n2.power - Increase attack damage by 2\nenter choice: ");
         String choice = scanner.nextLine();
-        if (choice.equals("1")) {
-            player.increaseHp(25);
-            rewardClaimed = true;    
-        } else if (choice.equals("2")) {
-            player.increaseAttackDamage(2);
-            rewardClaimed = true;
+        Reward selectedReward;
+
+        switch (choice) {
+            case "1":
+            case "recovery":
+                selectedReward = Reward.RECOVERY;
+                break;
+            case "2":
+            case "power":
+                selectedReward = Reward.POWER;
+                break;
+            default:
+                System.out.println("Invalid choice. Please try again.");
+                continue;
         }
-        else {
-            System.out.println("Invalid choice. Choose again.");
+        switch (selectedReward) {
+            case RECOVERY:
+                player.increaseHp(25);
+                break;
+            case POWER:
+                player.increaseAttackDamage(2);
+                break;
         }
-    }
+
+        rewardClaimed = true;
     }
 }
+}
+
